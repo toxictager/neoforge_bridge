@@ -26,17 +26,32 @@ neoForge {
 }
 
 repositories {
+    maven {
+        name = 'Curse Maven'
+        url = 'https://www.cursemaven.com'
+    }
     maven { url = 'https://repo.maven.apache.org/maven2/' }
 }
 
 configurations {
     shade
-    implementation.extendsFrom shade
+    compileOnly.extendsFrom shade
 }
 
 dependencies {
+    // Etched 5.0.0 NeoForge 1.21.1 (project 491890, file 7088631)
+    compileOnly "curse.maven:etched-491890:7088631"
+
+    // SophisticatedCore 1.21.1 NeoForge (project 618298, file 7455151)
+    compileOnly "curse.maven:sophisticated-core-618298:7455151"
+
+    // SophisticatedBackpacks 1.21.1 NeoForge (project 422286, file from uploaded jar)
+    // Using the same SophisticatedCore above covers the API we need
+
+    // Shaded libs
     shade 'net.jthink:jaudiotagger:3.0.1'
     shade 'commons-io:commons-io:2.15.1'
+    implementation configurations.shade
 }
 
 jar {

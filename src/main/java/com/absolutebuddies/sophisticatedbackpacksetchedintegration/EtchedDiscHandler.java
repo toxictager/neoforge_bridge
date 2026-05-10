@@ -7,12 +7,12 @@ import gg.moonflower.etched.common.network.play.ClientboundPlayEntityMusicPacket
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.p3pp3rf1y.sophisticatedcore.api.IDiscHandler;
 import net.p3pp3rf1y.sophisticatedcore.upgrades.jukebox.ServerStorageSoundHandler;
 
@@ -23,8 +23,6 @@ public class EtchedDiscHandler implements IDiscHandler<EtchedMusicDiscItem> {
 
     @Override
     public Optional<EtchedMusicDiscItem> getSongInfo(ItemStack stack, Level level) {
-        // Etched discs are identified by the IDiscHandler.supports() check,
-        // not by returning song info here. Return empty as in original.
         return Optional.empty();
     }
 
@@ -34,14 +32,10 @@ public class EtchedDiscHandler implements IDiscHandler<EtchedMusicDiscItem> {
         SophisticatedBackpacksEtchedIntegrationDataBase.ETCHED_STREAMS_CACHE.put(storageUuid, EtchedStreamInfo.forBlock(pos));
         SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION = getLengthInTicks(stack);
 
-        // NeoForge 1.21.1: use PacketDistributor.sendToPlayersNear instead of SimpleChannel.send
-        Vec3 center = Vec3.atCenterOf(pos);
-        level.getPlayers(p -> p.distanceToSqr(center) < 64 * 64).forEach(player ->
-            EtchedMessages.PLAY.send(
-                new ClientboundPlayBlockMusicPacket(stack.copy(), pos),
-                player.connection.connection
-            )
-        );
+        // NeoForge 1.21.1 packet sending
+        EtchedMessages.PLAY.send(new ClientboundPlayBlockMusicPacket(stack.copy(), pos),
+                PacketDistributor.NEAR.with(new PacketDistributor.TargetPoint(
+                        pos.getX(), pos.getY(), pos.getZ(), 64, level.dimension())));
 
         ServerStorageSoundHandler.startPlayingDisc(level, pos, storageUuid, stack.getItem(), onFinished);
     }
@@ -54,9 +48,8 @@ public class EtchedDiscHandler implements IDiscHandler<EtchedMusicDiscItem> {
 
         Entity entity = level.getEntity(entityId);
         if (entity != null) {
-            // Send stop-play packet to all tracking players
-            level.getChunkSource().broadcastAndSend(entity,
-                new ClientboundPlayEntityMusicPacket(stack.copy(), entity, false));
+            EtchedMessages.PLAY.send(new ClientboundPlayEntityMusicPacket(stack.copy(), entity, false),
+                    PacketDistributor.TRACKING_ENTITY_AND_SELF.with(entity));
         }
 
         ServerStorageSoundHandler.startPlayingDisc(level, pos, storageUuid, entityId, stack.getItem(), onFinished);
@@ -83,9 +76,11 @@ public class EtchedDiscHandler implements IDiscHandler<EtchedMusicDiscItem> {
     }
 
     public int getLengthInTicks(ItemStack stack) {
-        CompoundTag music = stack.getTag() != null ? stack.getTag().getCompound("Music") : null;
-        if (music != null) {
-            return music.getInt("Duration");
+        // In 1.21.1, NBT is accessed via getTagElement for legacy compat or DataComponents
+        // Etched stores duration in custom data tag "Music" -> "Duration"
+        CompoundTag tag = stack.getTagElement("Music");
+        if (tag != null) {
+            return tag.getInt("Duration");
         }
         return 0;
     }
