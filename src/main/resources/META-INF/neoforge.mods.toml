@@ -1,0 +1,48 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="All Rights Reserved"
+
+[[mods]]
+modId="sophisticatedbackpacksetchedintegration"
+version="2.0.0"
+displayName="Sophisticated Backpacks Etched Integration"
+authors="RootTool, At0m"
+description='''Full Featured Etched on Sophisticated Backpacks. NeoForge 1.21.1 port.'''
+logoFile="logo.png"
+
+[[dependencies.sophisticatedbackpacksetchedintegration]]
+    modId="neoforge"
+    type="required"
+    versionRange="[21.1.0,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.sophisticatedbackpacksetchedintegration]]
+    modId="minecraft"
+    type="required"
+    versionRange="[1.21.1,1.21.2)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.sophisticatedbackpacksetchedintegration]]
+    modId="etched"
+    type="required"
+    versionRange="[5.0.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.sophisticatedbackpacksetchedintegration]]
+    modId="sophisticatedcore"
+    type="required"
+    versionRange="[1.4.35,)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.sophisticatedbackpacksetchedintegration]]
+    modId="sophisticatedbackpacks"
+    type="required"
+    versionRange="[3.25.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+MixinConfigs = "sophisticatedbackpacksetchedintegration.mixins.json"

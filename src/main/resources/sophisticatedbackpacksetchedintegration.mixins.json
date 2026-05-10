@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "com.absolutebuddies.sophisticatedbackpacksetchedintegration.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "client": [],
+  "mixins": [
+    "ServerStorageSoundHandlerMixin",
+    "TrackDataMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

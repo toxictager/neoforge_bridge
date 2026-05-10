@@ -1,0 +1,79 @@
+plugins {
+    id 'java'
+    id 'net.neoforged.moddev' version '2.0.78'
+}
+
+group = 'com.absolutebuddies'
+version = '2.0.0'
+
+base {
+    archivesName = 'sophisticatedbackpacksetchedintegration'
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
+}
+
+neoForge {
+    version = '21.1.172'
+
+    mods {
+        sophisticatedbackpacksetchedintegration {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+repositories {
+    maven {
+        name = 'Curse Maven'
+        url = 'https://www.cursemaven.com'
+    }
+    maven {
+        name = 'Modrinth'
+        url = 'https://api.modrinth.com/maven'
+    }
+}
+
+dependencies {
+    // SophisticatedBackpacks and SophisticatedCore - use CurseForge/Modrinth file IDs or local jars
+    // For local dev, put the jars in a libs/ folder and add them here:
+    implementation files('libs/sophisticatedbackpacks-1_21_1-3_25_44_1736.jar')
+
+    // Etched (5.x for 1.21.1 NeoForge) - check CurseForge for the current file
+    // implementation 'curse.maven:etched-XXXXXX:YYYYYY'
+
+    // jaudiotagger is shaded by the existing integration - keep it
+    implementation 'net.jthink:jaudiotagger:3.0.1'
+    implementation 'commons-io:commons-io:2.15.1'
+}
+
+// Mixin support
+configurations {
+    annotationProcessor
+}
+
+dependencies {
+    annotationProcessor 'net.fabricmc:sponge-mixin:0.15.4+mixin.0.8.7'
+}
+
+jar {
+    manifest {
+        attributes([
+            'Specification-Title'     : 'sophisticatedbackpacksetchedintegration',
+            'Specification-Vendor'    : 'RootTool, At0m',
+            'Specification-Version'   : '1',
+            'Implementation-Title'    : 'Sophisticated-Backpacks-Etched-Integration',
+            'Implementation-Version'  : project.version,
+            'Implementation-Vendor'   : 'RootTool, At0m',
+            'MixinConfigs'           : 'sophisticatedbackpacksetchedintegration.mixins.json'
+        ])
+    }
+
+    // Shade jaudiotagger into the final jar (as the original did)
+    from configurations.runtimeClasspath.collect {
+        it.isDirectory() ? it : zipTree(it)
+    }.findAll {
+        it.name.contains('jaudiotagger') || it.name.contains('commons-io')
+    }
+}
