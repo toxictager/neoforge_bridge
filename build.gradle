@@ -33,25 +33,16 @@ repositories {
     maven { url = 'https://repo.maven.apache.org/maven2/' }
 }
 
-configurations {
-    shade
-    compileOnly.extendsFrom shade
-}
-
 dependencies {
-    // Etched 5.0.0 NeoForge 1.21.1 (project 491890, file 7088631)
+    // Etched 5.0.0 NeoForge 1.21.1
     compileOnly "curse.maven:etched-491890:7088631"
 
-    // SophisticatedCore 1.21.1 NeoForge (project 618298, file 7455151)
+    // SophisticatedCore 1.21.1 NeoForge
     compileOnly "curse.maven:sophisticated-core-618298:7455151"
 
-    // SophisticatedBackpacks 1.21.1 NeoForge (project 422286, file from uploaded jar)
-    // Using the same SophisticatedCore above covers the API we need
-
-    // Shaded libs
-    shade 'net.jthink:jaudiotagger:3.0.1'
-    shade 'commons-io:commons-io:2.15.1'
-    implementation configurations.shade
+    // Shaded libs - declare directly as implementation
+    implementation 'net.jthink:jaudiotagger:3.0.1'
+    implementation 'commons-io:commons-io:2.15.1'
 }
 
 jar {
@@ -69,8 +60,11 @@ jar {
 }
 
 shadowJar {
-    configurations = [project.configurations.shade]
     archiveClassifier = ''
+    dependencies {
+        include(dependency('net.jthink:jaudiotagger'))
+        include(dependency('commons-io:commons-io'))
+    }
     mergeServiceFiles()
     manifest {
         attributes([
