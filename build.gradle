@@ -54,10 +54,16 @@ jar {
 
 shadowJar {
     archiveClassifier = ''
+    configurations = [project.configurations.runtimeClasspath]
     dependencies {
-        include(dependency('net.jthink:jaudiotagger'))
-        include(dependency('commons-io:commons-io'))
+        include(dependency('net.jthink:jaudiotagger:3.0.1'))
+        include(dependency('commons-io:commons-io:2.15.1'))
     }
+    // Ensure we don't accidentally shade Minecraft or other mods
+    exclude 'net/minecraft/**'
+    exclude 'gg/moonflower/**'
+    exclude 'net/p3pp3rf1y/**'
+    
     mergeServiceFiles()
     manifest {
         attributes([
