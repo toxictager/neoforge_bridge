@@ -2,20 +2,21 @@ package com.absolutebuddies.sophisticatedbackpacksetchedintegration.mixin;
 
 import com.absolutebuddies.sophisticatedbackpacksetchedintegration.EtchedStreamInfo;
 import com.absolutebuddies.sophisticatedbackpacksetchedintegration.SophisticatedBackpacksEtchedIntegrationDataBase;
-import gg.moonflower.etched.common.network.EtchedMessages;
 import gg.moonflower.etched.common.network.play.ClientboundPlayBlockMusicPacket;
 import gg.moonflower.etched.common.network.play.ClientboundPlayEntityMusicPacket;
+import gg.moonflower.etched.core.registry.EtchedItems;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.JukeboxSong;
 import net.minecraft.world.phys.Vec3;
-import net.p3pp3rf1y.sophisticatedcore.network.PacketHandler;
-import net.p3pp3rf1y.sophisticatedcore.upgrades.jukebox.PlayDiscMessage;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.p3pp3rf1y.sophisticatedcore.upgrades.jukebox.PlayDiscPayload;
 import net.p3pp3rf1y.sophisticatedcore.upgrades.jukebox.ServerStorageSoundHandler;
-import net.p3pp3rf1y.sophisticatedcore.upgrades.jukebox.StopDiscPlaybackMessage;
+import net.p3pp3rf1y.sophisticatedcore.upgrades.jukebox.StopDiscPlaybackPayload;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,7 +29,7 @@ import java.util.UUID;
 public class ServerStorageSoundHandlerMixin {
 
     @Inject(
-        method = "startPlayingDisc(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Ljava/util/UUID;Lnet/minecraft/world/item/Item;Ljava/lang/Runnable;)V",
+        method = "startPlayingDisc(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Ljava/util/UUID;Lnet/minecraft/core/Holder;Ljava/lang/Runnable;)V",
         at = @At("HEAD"),
         cancellable = true
     )
@@ -36,21 +37,18 @@ public class ServerStorageSoundHandlerMixin {
         ServerLevel serverLevel,
         BlockPos position,
         UUID storageUuid,
-        Item item,
+        Holder<JukeboxSong> song,
         Runnable onFinishedHandler,
         CallbackInfo ci
     ) {
         Vec3 pos = Vec3.atCenterOf(position);
-        if (SyncActiveStreams(serverLevel, pos, item, storageUuid)) return;
+        if (SyncActiveStreams(serverLevel, pos, storageUuid)) return;
 
         System.out.println("[SBEI] onStartPlayingDiscBlock!");
 
-        // NeoForge 1.21.1: PacketHandler.sendToAllNear still works if SophisticatedCore kept the API
-        PacketHandler.INSTANCE.sendToAllNear(
-            serverLevel.dimension(),
-            pos,
-            128,
-            new PlayDiscMessage(storageUuid, Item.getId(item), position)
+        // NeoForge 1.21.1: PacketDistributor
+        PacketDistributor.sendToPlayersNear(serverLevel, null, pos.x, pos.y, pos.z, 128,
+            new PlayDiscPayload(storageUuid, song, position)
         );
 
         ServerStorageSoundHandler.putSoundInfo(
@@ -66,7 +64,7 @@ public class ServerStorageSoundHandlerMixin {
     }
 
     @Inject(
-        method = "startPlayingDisc(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;Ljava/util/UUID;ILnet/minecraft/world/item/Item;Ljava/lang/Runnable;)V",
+        method = "startPlayingDisc(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;Ljava/util/UUID;ILnet/minecraft/core/Holder;Ljava/lang/Runnable;)V",
         at = @At("HEAD"),
         cancellable = true
     )
@@ -75,19 +73,16 @@ public class ServerStorageSoundHandlerMixin {
         Vec3 position,
         UUID storageUuid,
         int entityId,
-        Item item,
+        Holder<JukeboxSong> song,
         Runnable onFinishedHandler,
         CallbackInfo ci
     ) {
-        if (SyncActiveStreams(serverLevel, position, item, storageUuid)) return;
+        if (SyncActiveStreams(serverLevel, position, storageUuid)) return;
 
         System.out.println("[SBEI] onStartPlayingDiscEntity!");
 
-        PacketHandler.INSTANCE.sendToAllNear(
-            serverLevel.dimension(),
-            position,
-            128,
-            new PlayDiscMessage(storageUuid, Item.getId(item), entityId)
+        PacketDistributor.sendToPlayersNear(serverLevel, null, position.x, position.y, position.z, 128,
+            new PlayDiscPayload(storageUuid, song, entityId)
         );
 
         ServerStorageSoundHandler.putSoundInfo(
@@ -130,20 +125,20 @@ public class ServerStorageSoundHandlerMixin {
         } else {
             Vec3 center = Vec3.atCenterOf(info.blockPos);
             serverLevel.getPlayers(p -> p.distanceToSqr(center) < 64 * 64).forEach(player ->
-                EtchedMessages.PLAY.send(
-                    new ClientboundPlayBlockMusicPacket(ItemStack.EMPTY, info.blockPos),
-                    player.connection.connection
-                )
+                player.connection.send(new ClientboundPlayBlockMusicPacket(ItemStack.EMPTY, info.blockPos))
             );
         }
     }
 
     @Unique
-    private static boolean SyncActiveStreams(ServerLevel serverLevel, Vec3 position, Item item, UUID storageUuid) {
+    private static boolean SyncActiveStreams(ServerLevel serverLevel, Vec3 position, UUID storageUuid) {
         SophisticatedBackpacksEtchedIntegrationDataBase.EStreamType type =
             SophisticatedBackpacksEtchedIntegrationDataBase.ACTIVE_STREAMS_CACHE.get(storageUuid);
 
-        if (!(item instanceof gg.moonflower.etched.common.item.EtchedMusicDiscItem)) {
+        // We check if it's an etched stream by looking at the ETCHED_STREAMS_CACHE
+        boolean isEtched = SophisticatedBackpacksEtchedIntegrationDataBase.ETCHED_STREAMS_CACHE.containsKey(storageUuid);
+
+        if (!isEtched) {
             // Vanilla disc being played
             if (type == SophisticatedBackpacksEtchedIntegrationDataBase.EStreamType.Etched) {
                 EtchedStreamInfo info = SophisticatedBackpacksEtchedIntegrationDataBase.ETCHED_STREAMS_CACHE.get(storageUuid);
@@ -159,11 +154,8 @@ public class ServerStorageSoundHandlerMixin {
         } else {
             // Etched disc being played
             if (type == SophisticatedBackpacksEtchedIntegrationDataBase.EStreamType.Vanilla) {
-                PacketHandler.INSTANCE.sendToAllNear(
-                    serverLevel.dimension(),
-                    position,
-                    128,
-                    new StopDiscPlaybackMessage(storageUuid)
+                PacketDistributor.sendToPlayersNear(serverLevel, null, position.x, position.y, position.z, 128,
+                    new StopDiscPlaybackPayload(storageUuid)
                 );
             }
             SophisticatedBackpacksEtchedIntegrationDataBase.ACTIVE_STREAMS_CACHE.put(

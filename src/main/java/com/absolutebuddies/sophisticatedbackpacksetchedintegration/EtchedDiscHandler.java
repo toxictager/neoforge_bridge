@@ -1,15 +1,15 @@
 package com.absolutebuddies.sophisticatedbackpacksetchedintegration;
 
-import gg.moonflower.etched.common.item.EtchedMusicDiscItem;
-import gg.moonflower.etched.common.network.EtchedMessages;
 import gg.moonflower.etched.common.network.play.ClientboundPlayBlockMusicPacket;
 import gg.moonflower.etched.common.network.play.ClientboundPlayEntityMusicPacket;
+import gg.moonflower.etched.core.registry.EtchedItems;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -19,10 +19,10 @@ import net.p3pp3rf1y.sophisticatedcore.upgrades.jukebox.ServerStorageSoundHandle
 import java.util.Optional;
 import java.util.UUID;
 
-public class EtchedDiscHandler implements IDiscHandler<EtchedMusicDiscItem> {
+public class EtchedDiscHandler implements IDiscHandler<Void> {
 
     @Override
-    public Optional<EtchedMusicDiscItem> getSongInfo(ItemStack stack, Level level) {
+    public Optional<Void> getSongInfo(ItemStack stack, Level level) {
         return Optional.empty();
     }
 
@@ -33,11 +33,12 @@ public class EtchedDiscHandler implements IDiscHandler<EtchedMusicDiscItem> {
         SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION = getLengthInTicks(stack);
 
         // NeoForge 1.21.1 packet sending
-        EtchedMessages.PLAY.send(new ClientboundPlayBlockMusicPacket(stack.copy(), pos),
-                PacketDistributor.NEAR.with(new PacketDistributor.TargetPoint(
-                        pos.getX(), pos.getY(), pos.getZ(), 64, level.dimension())));
+        PacketDistributor.sendToPlayersNear(level, null, pos.getX(), pos.getY(), pos.getZ(), 64, 
+                new ClientboundPlayBlockMusicPacket(stack.copy(), pos));
 
-        ServerStorageSoundHandler.startPlayingDisc(level, pos, storageUuid, stack.getItem(), onFinished);
+        if (stack.has(DataComponents.JUKEBOX_PLAYABLE)) {
+            ServerStorageSoundHandler.startPlayingDisc(level, pos, storageUuid, stack.get(DataComponents.JUKEBOX_PLAYABLE).song(), onFinished);
+        }
     }
 
     @Override
@@ -48,11 +49,12 @@ public class EtchedDiscHandler implements IDiscHandler<EtchedMusicDiscItem> {
 
         Entity entity = level.getEntity(entityId);
         if (entity != null) {
-            EtchedMessages.PLAY.send(new ClientboundPlayEntityMusicPacket(stack.copy(), entity, false),
-                    PacketDistributor.TRACKING_ENTITY_AND_SELF.with(entity));
+            PacketDistributor.sendToPlayersTrackingEntity(entity, new ClientboundPlayEntityMusicPacket(stack.copy(), entity, false));
         }
 
-        ServerStorageSoundHandler.startPlayingDisc(level, pos, storageUuid, entityId, stack.getItem(), onFinished);
+        if (stack.has(DataComponents.JUKEBOX_PLAYABLE)) {
+            ServerStorageSoundHandler.startPlayingDisc(level, pos, storageUuid, entityId, stack.get(DataComponents.JUKEBOX_PLAYABLE).song(), onFinished);
+        }
     }
 
     @Override
@@ -62,7 +64,7 @@ public class EtchedDiscHandler implements IDiscHandler<EtchedMusicDiscItem> {
 
     @Override
     public boolean supports(ItemStack stack) {
-        return stack.getItem() instanceof EtchedMusicDiscItem;
+        return stack.is(EtchedItems.ETCHED_MUSIC_DISC.get());
     }
 
     @Override
@@ -76,11 +78,11 @@ public class EtchedDiscHandler implements IDiscHandler<EtchedMusicDiscItem> {
     }
 
     public int getLengthInTicks(ItemStack stack) {
-        // In 1.21.1, NBT is accessed via getTagElement for legacy compat or DataComponents
+        // In 1.21.1, NBT is accessed via DataComponents.CUSTOM_DATA
         // Etched stores duration in custom data tag "Music" -> "Duration"
-        CompoundTag tag = stack.getTagElement("Music");
-        if (tag != null) {
-            return tag.getInt("Duration");
+        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData != null) {
+            return customData.copyTag().getCompound("Music").getInt("Duration");
         }
         return 0;
     }
