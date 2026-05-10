@@ -74,7 +74,6 @@ shadowJar {
     // Also exclude any other mod-like classes that might be in the classpath
     exclude 'data/**'
     exclude 'META-INF/mods.toml'
-    exclude 'META-INF/neoforge.mods.toml'
     
     mergeServiceFiles()
     manifest {

@@ -66,7 +66,7 @@ public class EtchedDiscHandler implements IDiscHandler<Holder<JukeboxSong>> {
 
     @Override
     public boolean supports(ItemStack stack) {
-        return stack.is(EtchedItems.ETCHED_MUSIC_DISC.get());
+        return stack.has(gg.moonflower.etched.core.registry.EtchedComponents.MUSIC.get());
     }
 
     @Override
