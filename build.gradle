@@ -26,21 +26,14 @@ neoForge {
 }
 
 repositories {
-    maven {
-        name = 'Curse Maven'
-        url = 'https://www.cursemaven.com'
-    }
     maven { url = 'https://repo.maven.apache.org/maven2/' }
 }
 
 dependencies {
-    // Etched 5.0.0 NeoForge 1.21.1
-    compileOnly "curse.maven:etched-491890:7088631"
+    // Local dependency jars - place in libs/ folder in repo
+    compileOnly fileTree(dir: 'libs', include: '*.jar')
 
-    // SophisticatedCore 1.21.1 NeoForge
-    compileOnly "curse.maven:sophisticated-core-618298:7455151"
-
-    // Shaded libs - declare directly as implementation
+    // Shaded libs
     implementation 'net.jthink:jaudiotagger:3.0.1'
     implementation 'commons-io:commons-io:2.15.1'
 }
