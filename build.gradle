@@ -55,14 +55,26 @@ jar {
 shadowJar {
     archiveClassifier = ''
     configurations = [project.configurations.runtimeClasspath]
+    
     dependencies {
         include(dependency('net.jthink:jaudiotagger:3.0.1'))
         include(dependency('commons-io:commons-io:2.15.1'))
     }
-    // Ensure we don't accidentally shade Minecraft or other mods
+
+    // Aggressive exclusions to prevent ANY split-package conflicts
     exclude 'net/minecraft/**'
+    exclude 'net/neoforged/**'
+    exclude 'com/mojang/**'
     exclude 'gg/moonflower/**'
     exclude 'net/p3pp3rf1y/**'
+    exclude 'org/spongepowered/**'
+    exclude 'javax/**'
+    exclude 'com/google/**'
+    
+    // Also exclude any other mod-like classes that might be in the classpath
+    exclude 'data/**'
+    exclude 'META-INF/mods.toml'
+    exclude 'META-INF/neoforge.mods.toml'
     
     mergeServiceFiles()
     manifest {
