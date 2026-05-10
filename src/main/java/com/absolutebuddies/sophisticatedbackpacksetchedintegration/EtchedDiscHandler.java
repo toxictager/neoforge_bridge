@@ -4,11 +4,13 @@ import gg.moonflower.etched.common.network.play.ClientboundPlayBlockMusicPacket;
 import gg.moonflower.etched.common.network.play.ClientboundPlayEntityMusicPacket;
 import gg.moonflower.etched.core.registry.EtchedItems;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.JukeboxSong;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -19,11 +21,11 @@ import net.p3pp3rf1y.sophisticatedcore.upgrades.jukebox.ServerStorageSoundHandle
 import java.util.Optional;
 import java.util.UUID;
 
-public class EtchedDiscHandler implements IDiscHandler<Void> {
+public class EtchedDiscHandler implements IDiscHandler<Holder<JukeboxSong>> {
 
     @Override
-    public Optional<Void> getSongInfo(ItemStack stack, Level level) {
-        return Optional.empty();
+    public Optional<Holder<JukeboxSong>> getSongInfo(ItemStack stack, Level level) {
+        return JukeboxSong.fromStack(level.registryAccess(), stack);
     }
 
     @Override
@@ -36,9 +38,9 @@ public class EtchedDiscHandler implements IDiscHandler<Void> {
         PacketDistributor.sendToPlayersNear(level, null, pos.getX(), pos.getY(), pos.getZ(), 64, 
                 new ClientboundPlayBlockMusicPacket(stack.copy(), pos));
 
-        if (stack.has(DataComponents.JUKEBOX_PLAYABLE)) {
-            ServerStorageSoundHandler.startPlayingDisc(level, pos, storageUuid, stack.get(DataComponents.JUKEBOX_PLAYABLE).song(), onFinished);
-        }
+        getSongInfo(stack, level).ifPresent(song ->
+            ServerStorageSoundHandler.startPlayingDisc(level, pos, storageUuid, song, onFinished)
+        );
     }
 
     @Override
@@ -52,9 +54,9 @@ public class EtchedDiscHandler implements IDiscHandler<Void> {
             PacketDistributor.sendToPlayersTrackingEntity(entity, new ClientboundPlayEntityMusicPacket(stack.copy(), entity, false));
         }
 
-        if (stack.has(DataComponents.JUKEBOX_PLAYABLE)) {
-            ServerStorageSoundHandler.startPlayingDisc(level, pos, storageUuid, entityId, stack.get(DataComponents.JUKEBOX_PLAYABLE).song(), onFinished);
-        }
+        getSongInfo(stack, level).ifPresent(song ->
+            ServerStorageSoundHandler.startPlayingDisc(level, pos, storageUuid, entityId, song, onFinished)
+        );
     }
 
     @Override
