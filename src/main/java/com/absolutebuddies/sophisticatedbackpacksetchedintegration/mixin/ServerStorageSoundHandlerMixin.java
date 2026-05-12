@@ -44,11 +44,11 @@ public class ServerStorageSoundHandlerMixin {
     ) {
         Vec3 pos = Vec3.atCenterOf(position);
         boolean etched = SophisticatedBackpacksEtchedIntegrationDataBase.ETCHED_STREAMS_CACHE.containsKey(storageUuid);
-        System.out.println("[SBEI] OnStartPlayingDiscBlock: storage=" + storageUuid + ", etched=" + etched);
+        System.err.println("[SBEI] OnStartPlayingDiscBlock: storage=" + storageUuid + ", etched=" + etched);
 
         if (SyncActiveStreams(serverLevel, pos, storageUuid)) return;
 
-        System.out.println("[SBEI] onStartPlayingDiscBlock!");
+        System.err.println("[SBEI] onStartPlayingDiscBlock!");
 
         // NeoForge 1.21.1: PacketDistributor
         PacketDistributor.sendToPlayersNear(serverLevel, null, pos.x, pos.y, pos.z, 128,
@@ -63,7 +63,7 @@ public class ServerStorageSoundHandlerMixin {
             serverLevel.getGameTime() + SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION
         );
 
-        System.out.println("[SBEI] Registered: " + SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION);
+        System.err.println("[SBEI] Registered: " + SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION);
         ci.cancel();
     }
 
@@ -82,11 +82,11 @@ public class ServerStorageSoundHandlerMixin {
         CallbackInfo ci
     ) {
         boolean etched = SophisticatedBackpacksEtchedIntegrationDataBase.ETCHED_STREAMS_CACHE.containsKey(storageUuid);
-        System.out.println("[SBEI] OnStartPlayingDiscEntity: storage=" + storageUuid + ", etched=" + etched);
+        System.err.println("[SBEI] OnStartPlayingDiscEntity: storage=" + storageUuid + ", etched=" + etched);
 
         if (SyncActiveStreams(serverLevel, position, storageUuid)) return;
 
-        System.out.println("[SBEI] onStartPlayingDiscEntity!");
+        System.err.println("[SBEI] onStartPlayingDiscEntity!");
 
         PacketDistributor.sendToPlayersNear(serverLevel, null, position.x, position.y, position.z, 128,
             new PlayDiscPayload(storageUuid, song, entityId)
@@ -100,7 +100,7 @@ public class ServerStorageSoundHandlerMixin {
             serverLevel.getGameTime() + SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION
         );
 
-        System.out.println("[SBEI] Registered: " + SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION);
+        System.err.println("[SBEI] Registered: " + SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION);
         ci.cancel();
     }
 
@@ -113,7 +113,7 @@ public class ServerStorageSoundHandlerMixin {
         SophisticatedBackpacksEtchedIntegrationDataBase.ACTIVE_STREAMS_CACHE.remove(storageUuid);
         EtchedStreamInfo info = (EtchedStreamInfo) SophisticatedBackpacksEtchedIntegrationDataBase.ETCHED_STREAMS_CACHE.remove(storageUuid);
         if (info != null && level instanceof ServerLevel serverLevel) {
-            System.out.println("[SBEI] OnSendStopMessage!");
+            System.err.println("[SBEI] OnSendStopMessage!");
             StopEtchedStream(serverLevel, info);
         }
     }
@@ -121,6 +121,7 @@ public class ServerStorageSoundHandlerMixin {
     @Unique
     private static void StopEtchedStream(ServerLevel serverLevel, EtchedStreamInfo info) {
         if (info.isEntity()) {
+            System.err.println("[SBEI] StopEtchedStream (Entity)!");
             Entity entity = serverLevel.getEntity(info.entityId);
             if (entity != null) {
                 // NeoForge 1.21.1: broadcastAndSend replaces TRACKING_ENTITY_AND_SELF
@@ -130,6 +131,7 @@ public class ServerStorageSoundHandlerMixin {
                 );
             }
         } else {
+            System.err.println("[SBEI] StopEtchedStream (Block)!");
             Vec3 center = Vec3.atCenterOf(info.blockPos);
             serverLevel.getPlayers(p -> p.distanceToSqr(center) < 64 * 64).forEach(player ->
                 player.connection.send(new ClientboundPlayBlockMusicPacket(ItemStack.EMPTY, info.blockPos))
@@ -144,7 +146,7 @@ public class ServerStorageSoundHandlerMixin {
 
         // We check if it's an etched stream by looking at the ETCHED_STREAMS_CACHE
         boolean isEtched = SophisticatedBackpacksEtchedIntegrationDataBase.ETCHED_STREAMS_CACHE.containsKey(storageUuid);
-        System.out.println("[SBEI] SyncActiveStreams: storage=" + storageUuid + ", isEtched=" + isEtched + ", currentType=" + type);
+        System.err.println("[SBEI] SyncActiveStreams: storage=" + storageUuid + ", isEtched=" + isEtched + ", currentType=" + type);
 
         if (!isEtched) {
             // Vanilla disc being played

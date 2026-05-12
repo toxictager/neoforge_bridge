@@ -28,25 +28,26 @@ public class EtchedDiscHandler implements IDiscHandler<Holder<JukeboxSong>> {
     public Optional<Holder<JukeboxSong>> getSongInfo(ItemStack stack, Level level) {
         Optional<Holder<JukeboxSong>> song = JukeboxSong.fromStack(level.registryAccess(), stack);
         if (song.isEmpty() && supports(stack)) {
-            System.out.println("[SBEI] getSongInfo: Etched disc detected, providing fallback song");
+            System.err.println("[SBEI] getSongInfo: Etched disc detected, providing fallback song");
             return level.registryAccess().registryOrThrow(Registries.JUKEBOX_SONG)
                     .getHolder(JukeboxSongs.THIRTEEN)
-                    .map(ref -> ref);
+                    .map(ref -> (Holder<JukeboxSong>) ref);
         }
         return song;
     }
 
     @Override
     public void playDisc(ServerLevel level, BlockPos pos, UUID storageUuid, ItemStack stack, Runnable onFinished) {
-        System.out.println("[SBEI] playDisc block for " + stack);
+        System.err.println("[SBEI] playDisc block for " + stack);
         SophisticatedBackpacksEtchedIntegrationDataBase.ETCHED_STREAMS_CACHE.put(storageUuid, EtchedStreamInfo.forBlock(pos));
         SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION = getLengthInTicks(stack);
-        System.out.println("[SBEI] Duration: " + SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION);
+        System.err.println("[SBEI] Duration: " + SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION);
 
-        // NeoForge 1.21.1 packet sending
+        // Send Etched packet to clients
         PacketDistributor.sendToPlayersNear(level, null, pos.getX(), pos.getY(), pos.getZ(), 64, 
                 new ClientboundPlayBlockMusicPacket(stack.copy(), pos));
 
+        // Start Sophisticated Core playback (needed to keep the upgrade state active)
         getSongInfo(stack, level).ifPresent(song ->
             ServerStorageSoundHandler.startPlayingDisc(level, pos, storageUuid, song, onFinished)
         );
@@ -54,10 +55,10 @@ public class EtchedDiscHandler implements IDiscHandler<Holder<JukeboxSong>> {
 
     @Override
     public void playDisc(ServerLevel level, Vec3 pos, UUID storageUuid, ItemStack stack, int entityId, Runnable onFinished) {
-        System.out.println("[SBEI] playDisc entity for " + stack);
+        System.err.println("[SBEI] playDisc entity for " + stack);
         SophisticatedBackpacksEtchedIntegrationDataBase.ETCHED_STREAMS_CACHE.put(storageUuid, EtchedStreamInfo.forEntity(entityId));
         SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION = getLengthInTicks(stack);
-        System.out.println("[SBEI] Duration: " + SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION);
+        System.err.println("[SBEI] Duration: " + SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION);
 
         Entity entity = level.getEntity(entityId);
         if (entity != null) {
@@ -71,14 +72,16 @@ public class EtchedDiscHandler implements IDiscHandler<Holder<JukeboxSong>> {
 
     @Override
     public Optional<Integer> getMusicLengthInTicks(ItemStack stack, Level level) {
-        return Optional.of(getLengthInTicks(stack));
+        int length = getLengthInTicks(stack);
+        System.err.println("[SBEI] getMusicLengthInTicks for " + stack + ": " + length);
+        return Optional.of(length);
     }
 
     @Override
     public boolean supports(ItemStack stack) {
         boolean hasComponent = stack.has(gg.moonflower.etched.core.registry.EtchedComponents.MUSIC.get());
         if (!stack.isEmpty() && stack.getItem().toString().contains("etched")) {
-             System.out.println("[SBEI] supports check for " + stack + ": " + hasComponent);
+             System.err.println("[SBEI] supports check for " + stack + ": " + hasComponent);
         }
         return hasComponent;
     }
@@ -94,11 +97,9 @@ public class EtchedDiscHandler implements IDiscHandler<Holder<JukeboxSong>> {
     }
 
     public int getLengthInTicks(ItemStack stack) {
-        // Log all components to help find where the duration is
-        System.out.println("[SBEI] Components: " + stack.getComponents());
+        // Log components using System.err to ensure they appear in console
+        System.err.println("[SBEI] Components for " + stack.getItem() + ": " + stack.getComponents());
 
-        // In 1.21.1, NBT is accessed via DataComponents.CUSTOM_DATA
-        // Etched stores duration in custom data tag "Music" -> "Duration"
         CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         if (customData != null) {
             int duration = customData.copyTag().getCompound("Music").getInt("Duration");
@@ -106,7 +107,6 @@ public class EtchedDiscHandler implements IDiscHandler<Holder<JukeboxSong>> {
         }
 
         // Fallback for Etched discs if duration is not found
-        System.out.println("[SBEI] Duration not found, using fallback: 2400");
         return 2400; // 120 seconds default
     }
 }
