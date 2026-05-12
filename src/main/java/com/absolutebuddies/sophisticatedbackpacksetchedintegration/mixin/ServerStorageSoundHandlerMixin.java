@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.JukeboxSong;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.p3pp3rf1y.sophisticatedcore.upgrades.jukebox.PlayDiscPayload;
@@ -102,12 +103,12 @@ public class ServerStorageSoundHandlerMixin {
         at = @At("HEAD"),
         remap = false
     )
-    private static void OnSendStopMessage(ServerLevel serverWorld, Vec3 position, UUID storageUuid, CallbackInfo ci) {
+    private static void OnSendStopMessage(Level level, Vec3 position, UUID storageUuid, CallbackInfo ci) {
         SophisticatedBackpacksEtchedIntegrationDataBase.ACTIVE_STREAMS_CACHE.remove(storageUuid);
         EtchedStreamInfo info = (EtchedStreamInfo) SophisticatedBackpacksEtchedIntegrationDataBase.ETCHED_STREAMS_CACHE.remove(storageUuid);
-        if (info != null) {
+        if (info != null && level instanceof ServerLevel serverLevel) {
             System.out.println("[SBEI] OnSendStopMessage!");
-            StopEtchedStream(serverWorld, info);
+            StopEtchedStream(serverLevel, info);
         }
     }
 
