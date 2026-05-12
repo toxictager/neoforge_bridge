@@ -43,6 +43,9 @@ public class ServerStorageSoundHandlerMixin {
         CallbackInfo ci
     ) {
         Vec3 pos = Vec3.atCenterOf(position);
+        boolean etched = SophisticatedBackpacksEtchedIntegrationDataBase.ETCHED_STREAMS_CACHE.containsKey(storageUuid);
+        System.out.println("[SBEI] OnStartPlayingDiscBlock: storage=" + storageUuid + ", etched=" + etched);
+
         if (SyncActiveStreams(serverLevel, pos, storageUuid)) return;
 
         System.out.println("[SBEI] onStartPlayingDiscBlock!");
@@ -78,6 +81,9 @@ public class ServerStorageSoundHandlerMixin {
         Runnable onFinishedHandler,
         CallbackInfo ci
     ) {
+        boolean etched = SophisticatedBackpacksEtchedIntegrationDataBase.ETCHED_STREAMS_CACHE.containsKey(storageUuid);
+        System.out.println("[SBEI] OnStartPlayingDiscEntity: storage=" + storageUuid + ", etched=" + etched);
+
         if (SyncActiveStreams(serverLevel, position, storageUuid)) return;
 
         System.out.println("[SBEI] onStartPlayingDiscEntity!");
@@ -138,6 +144,7 @@ public class ServerStorageSoundHandlerMixin {
 
         // We check if it's an etched stream by looking at the ETCHED_STREAMS_CACHE
         boolean isEtched = SophisticatedBackpacksEtchedIntegrationDataBase.ETCHED_STREAMS_CACHE.containsKey(storageUuid);
+        System.out.println("[SBEI] SyncActiveStreams: storage=" + storageUuid + ", isEtched=" + isEtched + ", currentType=" + type);
 
         if (!isEtched) {
             // Vanilla disc being played

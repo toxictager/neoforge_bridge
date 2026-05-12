@@ -1,0 +1,29 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license="GPLv3"
+issueTrackerURL = "https://github.com/jacksonhardaway/etched/issues"
+
+[[mods]]
+modId = "etched"
+version = "5.0.0"
+displayName = "Etched"
+logoFile = "etched.logo.png"
+authors = "Ocelot, Jackson, Farcr (Art), AstraZoey (Sound Design)"
+description = '''A new form of entertainment.'''
+
+[[mixins]]
+config="etched.mixins.json"
+
+[[dependencies.etched]]
+modId = "neoforge"
+type="required"
+versionRange="[21.1.0,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.etched]]
+modId = "minecraft"
+type="required"
+versionRange = "[1.21.1]"
+ordering = "NONE"
+side = "BOTH"

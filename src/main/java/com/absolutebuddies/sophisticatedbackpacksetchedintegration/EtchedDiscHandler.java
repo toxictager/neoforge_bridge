@@ -2,15 +2,16 @@ package com.absolutebuddies.sophisticatedbackpacksetchedintegration;
 
 import gg.moonflower.etched.common.network.play.ClientboundPlayBlockMusicPacket;
 import gg.moonflower.etched.common.network.play.ClientboundPlayEntityMusicPacket;
-import gg.moonflower.etched.core.registry.EtchedItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.JukeboxSong;
+import net.minecraft.world.item.JukeboxSongs;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -25,14 +26,21 @@ public class EtchedDiscHandler implements IDiscHandler<Holder<JukeboxSong>> {
 
     @Override
     public Optional<Holder<JukeboxSong>> getSongInfo(ItemStack stack, Level level) {
-        return JukeboxSong.fromStack(level.registryAccess(), stack);
+        Optional<Holder<JukeboxSong>> song = JukeboxSong.fromStack(level.registryAccess(), stack);
+        if (song.isEmpty() && supports(stack)) {
+            System.out.println("[SBEI] getSongInfo: Etched disc detected, providing fallback song");
+            return level.registryAccess().registryOrThrow(Registries.JUKEBOX_SONG)
+                    .getHolder(JukeboxSongs.THIRTEEN);
+        }
+        return song;
     }
 
     @Override
     public void playDisc(ServerLevel level, BlockPos pos, UUID storageUuid, ItemStack stack, Runnable onFinished) {
-        System.out.println("[SBEI] playDisc block!");
+        System.out.println("[SBEI] playDisc block for " + stack);
         SophisticatedBackpacksEtchedIntegrationDataBase.ETCHED_STREAMS_CACHE.put(storageUuid, EtchedStreamInfo.forBlock(pos));
         SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION = getLengthInTicks(stack);
+        System.out.println("[SBEI] Duration: " + SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION);
 
         // NeoForge 1.21.1 packet sending
         PacketDistributor.sendToPlayersNear(level, null, pos.getX(), pos.getY(), pos.getZ(), 64, 
@@ -45,9 +53,10 @@ public class EtchedDiscHandler implements IDiscHandler<Holder<JukeboxSong>> {
 
     @Override
     public void playDisc(ServerLevel level, Vec3 pos, UUID storageUuid, ItemStack stack, int entityId, Runnable onFinished) {
-        System.out.println("[SBEI] playDisc entity!");
+        System.out.println("[SBEI] playDisc entity for " + stack);
         SophisticatedBackpacksEtchedIntegrationDataBase.ETCHED_STREAMS_CACHE.put(storageUuid, EtchedStreamInfo.forEntity(entityId));
         SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION = getLengthInTicks(stack);
+        System.out.println("[SBEI] Duration: " + SophisticatedBackpacksEtchedIntegrationDataBase.DISC_DURATION);
 
         Entity entity = level.getEntity(entityId);
         if (entity != null) {
@@ -80,12 +89,18 @@ public class EtchedDiscHandler implements IDiscHandler<Holder<JukeboxSong>> {
     }
 
     public int getLengthInTicks(ItemStack stack) {
+        // Log all components to help find where the duration is
+        System.out.println("[SBEI] Components: " + stack.getComponents());
+
         // In 1.21.1, NBT is accessed via DataComponents.CUSTOM_DATA
         // Etched stores duration in custom data tag "Music" -> "Duration"
         CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         if (customData != null) {
-            return customData.copyTag().getCompound("Music").getInt("Duration");
+            int duration = customData.copyTag().getCompound("Music").getInt("Duration");
+            if (duration > 0) return duration;
         }
-        return 0;
+
+        // Fallback for Etched discs if duration is not found
+        return 2400; // 120 seconds default
     }
 }

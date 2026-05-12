@@ -1,0 +1,16 @@
+{
+  "jars": [
+    {
+      "identifier": {
+        "group": "com.github.umjammer",
+        "artifact": "jlayer"
+      },
+      "version": {
+        "range": "[1.0.0,)",
+        "artifactVersion": "1.0.3"
+      },
+      "path": "META-INF/jarjar/jlayer-1.0.3.jar",
+      "isObfuscated": false
+    }
+  ]
+}

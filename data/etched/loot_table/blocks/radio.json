@@ -1,0 +1,39 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:alternatives",
+          "children": [
+            {
+              "type": "minecraft:item",
+              "conditions": [
+                {
+                  "block": "etched:radio",
+                  "condition": "minecraft:block_state_property",
+                  "properties": {
+                    "portal": "true"
+                  }
+                }
+              ],
+              "name": "etched:portal_radio"
+            },
+            {
+              "type": "minecraft:item",
+              "name": "etched:radio"
+            }
+          ],
+          "conditions": [
+            {
+              "condition": "minecraft:survives_explosion"
+            }
+          ]
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "etched:blocks/radio"
+}
