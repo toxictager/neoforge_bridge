@@ -76,7 +76,11 @@ public class EtchedDiscHandler implements IDiscHandler<Holder<JukeboxSong>> {
 
     @Override
     public boolean supports(ItemStack stack) {
-        return stack.has(gg.moonflower.etched.core.registry.EtchedComponents.MUSIC.get());
+        boolean hasComponent = stack.has(gg.moonflower.etched.core.registry.EtchedComponents.MUSIC.get());
+        if (!stack.isEmpty() && stack.getItem().toString().contains("etched")) {
+             System.out.println("[SBEI] supports check for " + stack + ": " + hasComponent);
+        }
+        return hasComponent;
     }
 
     @Override
@@ -102,6 +106,7 @@ public class EtchedDiscHandler implements IDiscHandler<Holder<JukeboxSong>> {
         }
 
         // Fallback for Etched discs if duration is not found
+        System.out.println("[SBEI] Duration not found, using fallback: 2400");
         return 2400; // 120 seconds default
     }
 }

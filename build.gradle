@@ -68,7 +68,7 @@ shadowJar {
         include 'net.jthink.jaudiotagger.**'
     }
 
-    // Aggressive exclusions to prevent ANY split-package conflicts
+    // Aggressive exclusions to prevent ANY split-package conflicts and JAR pollution
     exclude 'net/minecraft/**'
     exclude 'net/neoforged/**'
     exclude 'com/mojang/**'
@@ -87,7 +87,15 @@ shadowJar {
     
     // Also exclude any other mod-like classes and resources
     exclude 'data/**'
+    exclude 'assets/**'
     exclude 'META-INF/mods.toml'
+    
+    // Prevent top-level files from being bundled
+    exclude 'logs.txt'
+    exclude 'MIGRATION_GUIDE.md'
+    exclude 'etched.*'
+    exclude 'pack.mcmeta' // Only the one in resources/ should be kept via standard jar task
+    
     // Exclude neoforge.mods.toml from dependencies, but we'll ensure our own is kept by the jar task merging
     exclude { it?.path == 'META-INF/neoforge.mods.toml' && (it?.file == null || !it.file.path.contains('resources')) }
     exclude 'META-INF/services/net.neoforged.**'
