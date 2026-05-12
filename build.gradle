@@ -89,7 +89,7 @@ shadowJar {
     exclude 'data/**'
     exclude 'META-INF/mods.toml'
     // Exclude neoforge.mods.toml from dependencies, but we'll ensure our own is kept by the jar task merging
-    exclude { it.path == 'META-INF/neoforge.mods.toml' && !it.file.path.contains('resources') }
+    exclude { it?.path == 'META-INF/neoforge.mods.toml' && (it?.file == null || !it.file.path.contains('resources')) }
     exclude 'META-INF/services/net.neoforged.**'
     
     mergeServiceFiles()
