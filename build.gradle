@@ -61,6 +61,9 @@ shadowJar {
         include(dependency('commons-io:commons-io:2.15.1'))
     }
 
+    relocate 'org.apache.commons.io', 'com.absolutebuddies.sophisticatedbackpacksetchedintegration.shadow.commonsio'
+    relocate 'net.jthink.jaudiotagger', 'com.absolutebuddies.sophisticatedbackpacksetchedintegration.shadow.jaudiotagger'
+
     // Aggressive exclusions to prevent ANY split-package conflicts
     exclude 'net/minecraft/**'
     exclude 'net/neoforged/**'
@@ -71,9 +74,12 @@ shadowJar {
     exclude 'javax/**'
     exclude 'com/google/**'
     exclude 'org/slf4j/**'
-    exclude 'org/apache/**'
     exclude 'com/sun/**'
     exclude 'it/unimi/**'
+    
+    // Module and Multi-Release metadata
+    exclude 'module-info.class'
+    exclude 'META-INF/versions/**'
     
     // Also exclude any other mod-like classes and resources
     exclude 'data/**'
