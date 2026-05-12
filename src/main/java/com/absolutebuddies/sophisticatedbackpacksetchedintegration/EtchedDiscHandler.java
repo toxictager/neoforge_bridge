@@ -31,7 +31,7 @@ public class EtchedDiscHandler implements IDiscHandler<Holder<JukeboxSong>> {
             System.out.println("[SBEI] getSongInfo: Etched disc detected, providing fallback song");
             return level.registryAccess().registryOrThrow(Registries.JUKEBOX_SONG)
                     .getHolder(JukeboxSongs.THIRTEEN)
-                    .map(Holder::direct);
+                    .map(ref -> ref);
         }
         return song;
     }
