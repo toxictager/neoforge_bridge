@@ -11,7 +11,6 @@ public class SophisticatedBackpacksEtchedIntegration {
 
     public SophisticatedBackpacksEtchedIntegration(IEventBus modEventBus) {
         modEventBus.addListener(this::setup);
-        NeoForge.EVENT_BUS.register(this);
     }
 
     private void setup(final FMLCommonSetupEvent event) {
