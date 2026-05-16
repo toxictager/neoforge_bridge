@@ -50,11 +50,6 @@ public class ServerStorageSoundHandlerMixin {
 
         System.err.println("[SBEI] onStartPlayingDiscBlock!");
 
-        // NeoForge 1.21.1: PacketDistributor
-        PacketDistributor.sendToPlayersNear(serverLevel, null, pos.x, pos.y, pos.z, 128,
-            new PlayDiscPayload(storageUuid, song, position)
-        );
-
         ServerStorageSoundHandler.putSoundInfo(
             serverLevel,
             storageUuid,
@@ -87,10 +82,6 @@ public class ServerStorageSoundHandlerMixin {
         if (SyncActiveStreams(serverLevel, position, storageUuid)) return;
 
         System.err.println("[SBEI] onStartPlayingDiscEntity!");
-
-        PacketDistributor.sendToPlayersNear(serverLevel, null, position.x, position.y, position.z, 128,
-            new PlayDiscPayload(storageUuid, song, entityId)
-        );
 
         ServerStorageSoundHandler.putSoundInfo(
             serverLevel,

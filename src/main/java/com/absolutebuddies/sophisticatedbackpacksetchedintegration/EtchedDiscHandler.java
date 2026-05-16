@@ -79,8 +79,18 @@ public class EtchedDiscHandler implements IDiscHandler<Holder<JukeboxSong>> {
 
     @Override
     public boolean supports(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        
+        // Try direct component check
         boolean hasComponent = stack.has(gg.moonflower.etched.core.registry.EtchedComponents.MUSIC.get());
-        if (!stack.isEmpty() && stack.getItem().toString().contains("etched")) {
+        
+        // Fallback: check by string ID in case of registry mismatch
+        if (!hasComponent) {
+            hasComponent = stack.getComponents().stream()
+                .anyMatch(c -> c.type().toString().contains("etched:music"));
+        }
+
+        if (stack.getItem().toString().contains("etched")) {
              System.err.println("[SBEI] supports check for " + stack + ": " + hasComponent);
         }
         return hasComponent;

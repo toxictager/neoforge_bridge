@@ -12,6 +12,8 @@ authors="RootTool, At0m"
 description='''Full Featured Etched on Sophisticated Backpacks. NeoForge 1.21.1 port.'''
 logoFile="logo.png"
 
+mixinConfigs=["sophisticatedbackpacksetchedintegration.mixins.json"]
+
 [[dependencies.sophisticatedbackpacksetchedintegration]]
     modId="neoforge"
     type="required"
@@ -47,4 +49,3 @@ logoFile="logo.png"
     ordering="AFTER"
     side="BOTH"
 
-MixinConfigs = "sophisticatedbackpacksetchedintegration.mixins.json"

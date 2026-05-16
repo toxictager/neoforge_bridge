@@ -10,11 +10,14 @@ import net.p3pp3rf1y.sophisticatedcore.upgrades.jukebox.DiscHandlerRegistry;
 public class SophisticatedBackpacksEtchedIntegration {
 
     public SophisticatedBackpacksEtchedIntegration(IEventBus modEventBus) {
+        System.err.println("[SBEI] Mod constructor called!");
         modEventBus.addListener(this::setup);
     }
 
     private void setup(final FMLCommonSetupEvent event) {
+        System.err.println("[SBEI] Setup method called!");
         event.enqueueWork(() -> {
+            System.err.println("[SBEI] Registering EtchedDiscHandler!");
             DiscHandlerRegistry.registerHandler(new EtchedDiscHandler());
         });
     }
